@@ -137,6 +137,10 @@ typedef uint8_t GpdAppEventActionType;
 // https://zigbeealliance.org/wp-content/uploads/2019/11/docs-09-5499-26-batt-zigbee-green-power-specification.pdf
 #define GP_CMD_STEP_DOWN	0x33
 
+// This enables the periodic commissioning timer for single event commissioning.
+#define PERIODIC_COMMISSION_TIMER
+
+
 // ----------- GPD application functional blocks ------------------------------
 // This implements the following
 // -- 1. NVM Storage (NVM3 or PSSTORE)for the application - NVM3 is used.
@@ -471,6 +475,13 @@ void emberGpdAppSingleEventCommission(void)
                                           0,
                                           0);
 }
+// A button release timeout handler for decommissioning with button 0
+static sl_sleeptimer_timer_handle_t button_release_timer_handle;
+static void buttonReleaseTimeout(sl_sleeptimer_timer_handle_t *handle, void *contextData)
+{
+  sl_sleeptimer_stop_timer(handle);
+  appAction = APP_EVENT_ACTION_SEND_DECOMMISSION;
+}
 
 // ----------------------------------------------------------------------------
 // ------------ END : Application events and actions --------------------------
@@ -481,13 +492,6 @@ void emberGpdAppSingleEventCommission(void)
 // ----------------------------------------------------------------------------
 #if defined EMBER_AF_PLUGIN_BUTTON
 #if BSP_BUTTON_COUNT == 2
-// A button release timeout handler for decommissioning with button 0
-static sl_sleeptimer_timer_handle_t button_release_timer_handle;
-static void buttonReleaseTimeout(sl_sleeptimer_timer_handle_t *handle, void *contextData)
-{
-  sl_sleeptimer_stop_timer(handle);
-  appAction = APP_EVENT_ACTION_SEND_DECOMMISSION;
-}
 // This function handles all button interrupts
 void halButtonIsr(uint8_t button, uint8_t state)
 {
@@ -497,10 +501,21 @@ void halButtonIsr(uint8_t button, uint8_t state)
   if (state == BUTTON_PRESSED)
   {
 	  // If the GPD is not commissioned, button 0 will handle commission requests
-	  // Must press button 0 four times with 1 second wait in-between each press to handle commission process
+	  // To enable single event commissioning (press button 0 once), enable the PERIODIC_COMMISSION_TIMER.
+	  // To enable the 4 button press, remove the PERIODIC_COMMISSION_TIMER define.
 	  if (gpd->gpdState < EMBER_GPD_APP_STATE_OPERATIONAL) {
 		  if (button0State == BUTTON_PRESSED) {
+			#if defined PERIODIC_COMMISSION_TIMER
+			  sl_sleeptimer_restart_periodic_timer_ms(&app_single_event_commission,
+			                                            APP_SINGLE_EVENT_COMMISSIONING_LOOP_TIME_MS,
+			                                            appSingleEventCommissionTimer,
+			                                            NULL,
+			                                            0,
+			                                            0);
+			#else
+			  // Must press button 0 four times with 1 second wait in-between each press to handle commission process
 			  appAction = APP_EVENT_ACTION_SEND_COMMISSION;
+			#endif
 		  }
 	  // If GPD is commissioned, the following function can be used on button 0
 	  // Allows for button 1 and 0 to be pressed at same time but button 0 function will continue
