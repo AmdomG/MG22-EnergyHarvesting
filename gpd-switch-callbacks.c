@@ -138,7 +138,7 @@ typedef uint8_t GpdAppEventActionType;
 #define GP_CMD_STEP_DOWN	0x33
 
 // This enables the periodic commissioning timer for single event commissioning.
-#define PERIODIC_COMMISSION_TIMER
+//#define PERIODIC_COMMISSION_TIMER
 
 
 // ----------- GPD application functional blocks ------------------------------
@@ -465,7 +465,7 @@ static void appSingleEventCommissionTimer(sl_sleeptimer_timer_handle_t *handle, 
     sl_sleeptimer_stop_timer(handle);
   }
 }
-// Application Commissioning that completes all the statest of the commissioning
+// Application Commissioning that completes all the states of the commissioning
 void emberGpdAppSingleEventCommission(void)
 {
   sl_sleeptimer_restart_periodic_timer_ms(&app_single_event_commission,
@@ -483,6 +483,35 @@ static void buttonReleaseTimeout(sl_sleeptimer_timer_handle_t *handle, void *con
   appAction = APP_EVENT_ACTION_SEND_DECOMMISSION;
 }
 
+// Adding debounce for button presses. The functionality comes from button.c
+//DEBOUNCE operation is based upon the theory that when multiple reads in a row
+//return the same value, we have passed any debounce created by the mechanical
+//action of a button.  The define "DEBOUNCE" says how many reads in a row
+//should return the same value.  The value '5', below, is the recommended value
+//since this should require the signal to have stabalized for approximately
+//100us which should be much longer than any debounce action.
+//Uncomment the following line to enable software debounce operation:
+#define DEBOUNCE 5
+uint8_t buttonDebounce(uint8_t pin)
+{
+  uint8_t buttonStateNow;
+  #if (DEBOUNCE > 0)
+  uint8_t buttonStatePrev;
+  uint32_t debounce;
+  #endif //(DEBOUNCE > 0)
+
+  buttonStateNow = halButtonPinState(pin);
+  #if (DEBOUNCE > 0)
+  //read button until get "DEBOUNCE" number of consistent readings
+  for ( debounce = 0;
+        debounce < DEBOUNCE;
+        debounce = (buttonStateNow == buttonStatePrev) ? debounce + 1 : 0 ) {
+    buttonStatePrev = buttonStateNow;
+    buttonStateNow = halButtonPinState(pin);
+  }
+  #endif //(DEBOUNCE > 0)
+  return buttonStateNow;
+}
 // ----------------------------------------------------------------------------
 // ------------ END : Application events and actions --------------------------
 // ----------------------------------------------------------------------------
@@ -498,6 +527,9 @@ void halButtonIsr(uint8_t button, uint8_t state)
   EmberGpd_t * gpd = emberGpdGetGpd();
   uint8_t button0State = halButtonState(BSP_BUTTON0_PIN);
   uint8_t button1State = halButtonState(BSP_BUTTON1_PIN);
+//    uint8_t button0State = buttonDebounce(BSP_BUTTON0_PIN);
+//    uint8_t button1State = buttonDebounce(BSP_BUTTON1_PIN);
+
   if (state == BUTTON_PRESSED)
   {
 	  // If the GPD is not commissioned, button 0 will handle commission requests
