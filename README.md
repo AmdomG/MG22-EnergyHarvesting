@@ -6,6 +6,6 @@ The main source file for this project is gpd-switch-callbacks.c
 
 This has been tested and run on a WSTK board with BRD4182A radio board. See comments in main file for switching between WSTK board and reference design.
 
-# TO DOWNLOAD THE SLS PROJCET FILE
+# To Download sls project file
 You must clone the project using git-lfs.
 https://git-lfs.github.com./
