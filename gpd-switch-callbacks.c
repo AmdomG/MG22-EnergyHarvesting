@@ -138,7 +138,7 @@ typedef uint8_t GpdAppEventActionType;
 #define GP_CMD_STEP_DOWN	0x33
 
 // This enables the periodic commissioning timer for single event commissioning.
-//#define PERIODIC_COMMISSION_TIMER
+#define PERIODIC_COMMISSION_TIMER
 
 
 // ----------- GPD application functional blocks ------------------------------

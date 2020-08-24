@@ -7,8 +7,6 @@
 #define __GPD_CONFIG__
 
 
-
-
 // Top level macros
 #define EMBER_AF_DEVICE_NAME "gpd-mg22-brd4182a-latest-sdk"
 
@@ -16,7 +14,7 @@
 // Generated plugin macros
 
 // Use this macro for running the application on a SLWSTK6021A board with BRD4182A radio boards
-#define WSTK_BOARD
+//#define WSTK_BOARD
 
 // Use this macro to check if ADC plugin is included
 #define EMBER_AF_PLUGIN_ADC
