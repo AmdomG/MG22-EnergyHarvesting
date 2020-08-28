@@ -491,7 +491,7 @@ static void buttonReleaseTimeout(sl_sleeptimer_timer_handle_t *handle, void *con
 //since this should require the signal to have stabalized for approximately
 //100us which should be much longer than any debounce action.
 //Uncomment the following line to enable software debounce operation:
-#define DEBOUNCE 5
+#define DEBOUNCE 20
 uint8_t buttonDebounce(uint8_t pin)
 {
   uint8_t buttonStateNow;
@@ -525,10 +525,10 @@ uint8_t buttonDebounce(uint8_t pin)
 void halButtonIsr(uint8_t button, uint8_t state)
 {
   EmberGpd_t * gpd = emberGpdGetGpd();
-  uint8_t button0State = halButtonState(BSP_BUTTON0_PIN);
-  uint8_t button1State = halButtonState(BSP_BUTTON1_PIN);
-//    uint8_t button0State = buttonDebounce(BSP_BUTTON0_PIN);
-//    uint8_t button1State = buttonDebounce(BSP_BUTTON1_PIN);
+//  uint8_t button0State = halButtonState(BSP_BUTTON0_PIN);
+//  uint8_t button1State = halButtonState(BSP_BUTTON1_PIN);
+    uint8_t button0State = buttonDebounce(BSP_BUTTON0_PIN);
+    uint8_t button1State = buttonDebounce(BSP_BUTTON1_PIN);
 
   if (state == BUTTON_PRESSED)
   {
